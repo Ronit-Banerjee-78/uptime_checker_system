@@ -9,7 +9,8 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendOutageAlert(monitor, incident) {
-  const { toMailId } = await MonitorController.getUserByMonitorId(monitor.id);
+  const  toMailId= await MonitorController.getUserByMonitorId(monitor.id);
+  const recipientEmail = toMailId?.email;
   const subject = `🚨 Outage Detected: ${monitor.name}`;
   const body = `
     Monitor: ${monitor.name}
@@ -26,7 +27,7 @@ export async function sendOutageAlert(monitor, incident) {
       transporter
         .sendMail({
           from: config.smtp.user,
-          to: toMailId.email,
+          to: recipiementEmail,
           subject,
           text: body,
         })

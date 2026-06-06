@@ -66,6 +66,17 @@ class Monitor {
     );
     return monitors;
   }
+  static async getUserByMonitorId(monitorId) {
+    const {
+      rows: [user],
+    } = await query(
+      `SELECT users.* FROM users
+       JOIN monitors ON monitors.user_id = users.id
+       WHERE monitors.id = $1`,
+      [monitorId],
+    );
+    return user;
+  }
 }
 
 export default Monitor;

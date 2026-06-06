@@ -89,6 +89,20 @@ class MonitorController {
       res.status(500).json({ error: "Failed to fetch monitors for user" });
     }
   }
+  static async getUserByMonitorId(req, res, next) {
+    const monitorId = req.params.id;
+    try {
+      const user = await Monitor.getUserByMonitorId(monitorId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found for monitor" });
+      }
+      res.status(200).json(user);
+    } catch (err) {
+      next(err);
+      console.error("[Error] Getting user by monitor ID:", err.message);
+      res.status(500).json({ error: "Failed to fetch user for monitor" });
+    }
+  }
 }
 
 export default MonitorController;

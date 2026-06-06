@@ -7,8 +7,13 @@ const connection = {
   host: config.redis.host,
   port: config.redis.port,
   password: config.redis.password,
+  maxRetriesPerRequest: null,
 };
-
+if (config.redis.isProduction) {
+  connection.tls = {
+    rejectUnauthorized: false, // Prevents certificate chain validation failures on the public web
+  };
+}
 export const checkQueue = new Queue("url-checks", { connection });
 
 // Worker processes each check job

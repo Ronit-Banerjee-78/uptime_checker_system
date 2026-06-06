@@ -1,7 +1,7 @@
-import nodemailer from 'nodemailer';
-import axios from 'axios';
-import { config } from '../config/index.js';
-
+import nodemailer from "nodemailer";
+import axios from "axios";
+import { config } from "../config/index.js";
+import MonitorController from "../controllers/MonitorController.js";
 const transporter = nodemailer.createTransport({
   host: config.smtp.host,
   port: config.smtp.port,
@@ -9,6 +9,7 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function sendOutageAlert(monitor, incident) {
+  const { toMailId } = await MonitorController.getUserByMonitorId(monitor.id);
   const subject = `🚨 Outage Detected: ${monitor.name}`;
   const body = `
     Monitor: ${monitor.name}
@@ -20,28 +21,34 @@ export async function sendOutageAlert(monitor, incident) {
   const promises = [];
 
   // Email
-  if (config.smtp.alertEmail && config.smtp.user) {
+  if (toMailId && config.smtp.user) {
     promises.push(
-      transporter.sendMail({
-        from: config.smtp.user,
-        to: config.smtp.alertEmail,
-        subject,
-        text: body,
-      }).catch(err => console.error('[Notify] Email error:', err.message))
+      transporter
+        .sendMail({
+          from: config.smtp.user,
+          to: toMailId.email,
+          subject,
+          text: body,
+        })
+        .catch((err) => console.error("[Notify] Email error:", err.message)),
     );
   }
 
   // Webhook (Slack / Discord / custom)
   if (config.webhookUrl) {
     promises.push(
-      axios.post(config.webhookUrl, {
-        text: `${subject}\n\n${body}`,
-        embeds: [{
-          title: subject,
-          description: body,
-          color: 0xff0000,
-        }],
-      }).catch(err => console.error('[Notify] Webhook error:', err.message))
+      axios
+        .post(config.webhookUrl, {
+          text: `${subject}\n\n${body}`,
+          embeds: [
+            {
+              title: subject,
+              description: body,
+              color: 0xff0000,
+            },
+          ],
+        })
+        .catch((err) => console.error("[Notify] Webhook error:", err.message)),
     );
   }
 
